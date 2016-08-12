@@ -1,6 +1,6 @@
 winston = require "winston"
 
-level = "info"
+level = "debug"
 level = "debug" if process.env.DEBUG in ["1", "true"]
 
 logger = new winston.Logger

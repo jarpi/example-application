@@ -13,7 +13,7 @@ class Generator extends EventEmitter
 
 	constructor: ( @types ) ->
 		super
-
+		log.info  @types 
 		@chance = new Chance
 
 	start: ->

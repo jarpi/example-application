@@ -8,6 +8,10 @@ methodOverride = require "method-override"
 bodyParser     = require "body-parser"
 socketio       = require "socket.io"
 errorHandler   = require "error-handler"
+ioClient       = require "socket.io-client" 
+middleware 	   = require('socketio-wildcard')();
+
+middleware(ioClient)
 
 log       = require "./lib/log"
 Generator = require "./lib/Generator"
@@ -20,14 +24,40 @@ io        = socketio.listen server
 sockets = []
 
 # create a generator of data
-persons = new Generator [ "first", "last", "gender", "birthday", "age", "ssn"]
+# persons = new Generator [ "first", "last", "gender", "birthday", "age", "ssn"]
+
+# persons.start()
+
+# setup connection logic
+address  = "http://localhost:4000"
+console.log "Connecting to #{address}"
+clientSocket = ioClient.connect "#{address}",
+	"reconnect":          true
+	"reconnection delay": 1000
+
+clientSocket.on "connect", ->
+	console.log "Connected"
+
+clientSocket.on "disconnect", ->
+	console.log "Disconnected"
 
 # distribute data over the websockets
-persons.on "data", (data) ->
-	data.timestamp = Date.now()
+clientSocket.on "persons:create", (data) ->
 	socket.emit "persons:create", data for socket in sockets
 
-persons.start()
+clientSocket.on "*", (data) -> 
+	console.log("Wildcard event")
+	console.dir(data)
+
+clientSocket.on "data", (data) -> 
+	console.log("data event")
+	console.dir(data)
+
+clientSocket.on "connect_error", (err) -> 
+	console.dir(err)
+
+clientSocket.on "connect_timeout", (err) -> 
+	console.dir(err)
 
 # websocket connection logic
 io.on "connection", (socket) ->
